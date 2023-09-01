@@ -16,7 +16,9 @@ import matplotlib.pyplot as plt
 
 # Import datasets, classifiers and performance metrics
 from sklearn import datasets, metrics, svm
+
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 ###############################################################################
 # Digits dataset
@@ -54,24 +56,46 @@ for ax, image, label in zip(axes, digits.images, digits.target):
 # vector classifier on the train samples. The fitted classifier can
 # subsequently be used to predict the value of the digit for the samples
 # in the test subset.
+# Function to split data into train, dev, and test sets
+def split_train_dev_test(X, y, test_size, dev_size):
+    # Split data into train, dev, and test sets
+    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=test_size, random_state=42)
+    X_dev, X_test, y_dev, y_test = train_test_split(X_temp, y_temp, test_size=dev_size/(1 - test_size), random_state=42)
+    
+    return X_train, X_dev, X_test, y_train, y_dev, y_test
+
+# Function to make predictions and evaluate accuracy
+def predict_and_eval(model, X_test, y_test):
+    # Make predictions
+    y_pred = model.predict(X_test)
+    
+    # Evaluate accuracy
+    accuracy = accuracy_score(y_test, y_pred)
+    
+    return accuracy
+
 
 # flatten the images
 n_samples = len(digits.images)
 data = digits.images.reshape((n_samples, -1))
 
+# Split data into train, dev, and test sets using the split_train_dev_test function
+X_train, X_dev, X_test, y_train, y_dev, y_test = split_train_dev_test(
+    data, digits.target, test_size=0.2, dev_size=0.1
+)
+
 # Create a classifier: a support vector classifier
 clf = svm.SVC(gamma=0.001)
-
-# Split data into 50% train and 50% test subsets
-X_train, X_test, y_train, y_test = train_test_split(
-    data, digits.target, test_size=0.5, shuffle=False
-)
 
 # Learn the digits on the train subset
 clf.fit(X_train, y_train)
 
-# Predict the value of the digit on the test subset
+# Predict the value of the digit on the test subset and evaluate using predict_and_eval
 predicted = clf.predict(X_test)
+accuracy = predict_and_eval(clf, X_test, y_test)
+
+print(f"Accuracy on test set: {accuracy}")
+
 
 ###############################################################################
 # Below we visualize the first 4 test samples and show their predicted
